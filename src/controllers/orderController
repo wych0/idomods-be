@@ -4,8 +4,45 @@ const { formatOrderToCSVRow } = require("../utlis/formatOrder");
 getAll = async (req, res) => {
   try {
     const orders = await loadOrdersFromFile();
+    let { minWorth, maxWorth } = req.query;
 
-    const { minWorth, maxWorth } = req.query;
+    if (minWorth && isNaN(minWorth)) {
+      return res.status(400).json({
+        success: false,
+        message: "minWorth must be a valid number",
+      });
+    }
+
+    if (maxWorth && isNaN(maxWorth)) {
+      return res.status(400).json({
+        success: false,
+        message: "maxWorth must be a valid number",
+      });
+    }
+
+    minWorth = minWorth ? parseFloat(minWorth) : null;
+    maxWorth = maxWorth ? parseFloat(maxWorth) : null;
+
+    if (minWorth !== null && minWorth < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "minWorth cannot be negative",
+      });
+    }
+
+    if (maxWorth !== null && maxWorth < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "maxWorth cannot be negative",
+      });
+    }
+
+    if (minWorth !== null && maxWorth !== null && minWorth > maxWorth) {
+      return res.status(400).json({
+        success: false,
+        message: "minWorth cannot be greater than maxWorth",
+      });
+    }
 
     const filteredOrders = orders.filter((order) => {
       if (minWorth && order.orderWorth < parseFloat(minWorth)) return false;
@@ -43,7 +80,7 @@ get = async (req, res) => {
     if (!order) {
       return res.status(404).json({
         success: false,
-        message: "Couldn't find order.",
+        message: "Couldn't find order",
       });
     }
     res.status(200).json(order);
