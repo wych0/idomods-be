@@ -1,0 +1,62 @@
+const { loadOrdersFromFile, findById } = require("../services/orderService");
+const { formatOrderToCSVRow } = require("../utlis/formatOrder");
+
+getAll = async (req, res) => {
+  try {
+    const orders = await loadOrdersFromFile();
+
+    const { minWorth, maxWorth } = req.query;
+
+    const filteredOrders = orders.filter((order) => {
+      if (minWorth && order.orderWorth < parseFloat(minWorth)) return false;
+      if (maxWorth && order.orderWorth > parseFloat(maxWorth)) return false;
+
+      return true;
+    });
+
+    let csv = "";
+    if (filteredOrders.length > 0) {
+      const headers = Object.keys(filteredOrders[0]);
+      csv += headers.join(",") + "\n";
+
+      filteredOrders.forEach((order) => {
+        csv += formatOrderToCSVRow(order, headers) + "\n";
+      });
+    }
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=orders.csv");
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to get orders",
+      error: error.message,
+    });
+  }
+};
+
+get = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const order = await findById(id);
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Couldn't find order.",
+      });
+    }
+    res.status(200).json(order);
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to get order",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  getAll,
+  get,
+};
