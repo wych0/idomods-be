@@ -23,7 +23,16 @@ cd idomods-be
 npm install
 ```
 
-3. **Run Application**
+3. **Configure Application**
+
+Create .env file with:
+- IDOSELL_API_KEY,
+- IDOSELL_API_URL,
+- BASIC_AUTH_USER,
+- BASIC_AUTH_PASSWORD,
+- PORT (optional).
+
+4. **Run Application**
 
 ```shell script
 npm start
